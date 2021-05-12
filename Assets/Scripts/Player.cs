@@ -109,6 +109,8 @@ public class Player : MonoBehaviour
             jumpRequest = true;
     }
 
+
+
     private float CheckDownSpeed(float downSpeed)
     {
         if (

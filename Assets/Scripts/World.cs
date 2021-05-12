@@ -9,6 +9,8 @@ public class World : MonoBehaviour
     public BiomeAttribute biome;
 
     public Transform player;
+    public Player playerObject;
+
     public Vector3 spawnPosition;
 
     public Material material;
@@ -26,15 +28,27 @@ public class World : MonoBehaviour
     public GameObject debugScreen;
 
     public int minTerrainHeight = 2;
-    public int maxTerrainHeight = 50;
+    public int maxTerrainHeight = 16;
 
     private void Start()
     {
+        
 
         Random.InitState(seed);
 
-        spawnPosition = new Vector3((VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f, VoxelData.ChunkHeight, (VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f);
+        int _xZ = ((VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks) * VoxelData.ChunkWidth;
+        int _xZOffSet = (VoxelData.ViewDistanceInChunks * VoxelData.ChunkWidth);
+        int _y = VoxelData.ChunkHeight;
+
+
+        spawnPosition = new Vector3(_xZ + _xZOffSet, _y, _xZ + _xZOffSet);
+
+        //spawnPosition = new Vector3(((VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f), VoxelData.ChunkHeight, (VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f);
+
         GenerateWorld();
+
+        player.position = CheckSpawnPos(spawnPosition);
+
         playerLastChunkCoord = GetChunkCoordFromVector3(player.position);
 
 
@@ -60,7 +74,6 @@ public class World : MonoBehaviour
 
     void GenerateWorld()
     {
-
         for (int x = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; x < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; x++)
         {
             for (int z = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; z < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; z++)
@@ -72,9 +85,32 @@ public class World : MonoBehaviour
             }
         }
 
-        spawnPosition.y -= 50f;
-        player.position = spawnPosition;
 
+        
+
+    }
+
+    private Vector3 CheckSpawnPos(Vector3 _spawnPosition)
+    {
+
+        Vector3 spawnPos = _spawnPosition;
+
+        float yPos = spawnPos.y;
+
+        int timeOut = VoxelData.ChunkHeight;
+
+        while (!CheckForVoxel(new Vector3(spawnPos.x, spawnPos.y - 2f, spawnPos.z)))
+        {
+            spawnPos.y -= 1;
+            timeOut--;
+            if (timeOut < 0)
+            {
+                Debug.Log("Error in CheckSpawnPos() - Unable to find ground");
+                break;
+            }
+        }
+
+        return new Vector3(spawnPos.x, spawnPos.y, spawnPos.z);
     }
 
     IEnumerator CreateChunks()
