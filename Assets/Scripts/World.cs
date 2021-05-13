@@ -9,6 +9,8 @@ public class World : MonoBehaviour
     public BiomeAttribute biome;
 
     public Transform player;
+    public Player playerObject;
+
     public Vector3 spawnPosition;
 
     public Material material;
@@ -25,16 +27,27 @@ public class World : MonoBehaviour
 
     public GameObject debugScreen;
 
-    public int minTerrainHeight = 2;
-    public int maxTerrainHeight = 50;
+    public int defaultTerrainHeight = 25;
 
     private void Start()
     {
+        
 
         Random.InitState(seed);
 
-        spawnPosition = new Vector3((VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f, VoxelData.ChunkHeight, (VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f);
+        int _xZ = ((VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks) * VoxelData.ChunkWidth;
+        int _xZOffSet = (VoxelData.ViewDistanceInChunks * VoxelData.ChunkWidth);
+        int _y = VoxelData.ChunkHeight;
+
+
+        spawnPosition = new Vector3(_xZ + _xZOffSet, _y, _xZ + _xZOffSet);
+
+        //spawnPosition = new Vector3(((VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f), VoxelData.ChunkHeight, (VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f);
+
         GenerateWorld();
+
+        player.position = CheckSpawnPos(spawnPosition);
+
         playerLastChunkCoord = GetChunkCoordFromVector3(player.position);
 
 
@@ -60,7 +73,6 @@ public class World : MonoBehaviour
 
     void GenerateWorld()
     {
-
         for (int x = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; x < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; x++)
         {
             for (int z = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; z < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; z++)
@@ -72,9 +84,53 @@ public class World : MonoBehaviour
             }
         }
 
-        spawnPosition.y -= 50f;
-        player.position = spawnPosition;
 
+        
+
+    }
+
+    private Vector3 CheckSpawnPos(Vector3 _spawnPosition)
+    {
+
+        Vector3 spawnPos = _spawnPosition;
+
+        bool gotPos = false;
+
+        int timeOut = VoxelData.ChunkHeight;
+
+        while (gotPos == false)
+        {
+            while (!CheckForVoxel(new Vector3(spawnPos.x, spawnPos.y - 2f, spawnPos.z)))
+            {
+                spawnPos.y -= 1;
+                timeOut--;
+
+                if (spawnPos.y < defaultTerrainHeight)
+                {
+                    spawnPos.y = _spawnPosition.y;
+                    spawnPos.x -= 1;
+                    spawnPos.z += 1;
+                    timeOut = VoxelData.ChunkHeight;
+                }
+
+                if (timeOut < 0)
+                {
+                    Debug.Log("Error in CheckSpawnPos() - Unable to find ground");
+                    break;
+                }
+            }
+
+            if (CheckForVoxel(new Vector3(spawnPos.x, spawnPos.y - 2f, spawnPos.z)))
+            {
+                gotPos = true;
+            }
+            else
+                Debug.Log("Error in CheckSpawnPos() - Unable to find suitable spawn point");
+                break;
+        }
+
+
+        return new Vector3(spawnPos.x, spawnPos.y, spawnPos.z);
     }
 
     IEnumerator CreateChunks()
@@ -187,13 +243,13 @@ public class World : MonoBehaviour
         /* BASIC TERRAIN PASS */
 
         int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 0, biome.terrainScale)) + biome.solidGroundHeight;
-        terrainHeight = Mathf.Max(minTerrainHeight, terrainHeight);
+        terrainHeight = Mathf.Max(defaultTerrainHeight, terrainHeight);
         byte voxelValue = 0;
 
         if (yPos == terrainHeight)
             voxelValue = 3;
         else if (yPos < terrainHeight && yPos > terrainHeight - 4)
-            voxelValue = 5;
+            voxelValue = 4;
         else if (yPos > terrainHeight)
             return 0;
         else
@@ -214,6 +270,17 @@ public class World : MonoBehaviour
             }
 
         }
+
+        foreach (Lode lode in biome.lodes)
+        {
+            if (lode.nodeName == "Caves")
+            {
+                if (Noise.Get3DPerlin(pos, lode.noiseOffset, lode.scale, lode.threshhold))
+                    voxelValue = lode.blockID;
+            }
+        }
+
+
 
         return voxelValue;
 
