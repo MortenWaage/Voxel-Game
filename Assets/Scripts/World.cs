@@ -229,7 +229,7 @@ public class World : MonoBehaviour
         if (yPos == terrainHeight)
             voxelValue = 3;
         else if (yPos < terrainHeight && yPos > terrainHeight - 4)
-            voxelValue = 5;
+            voxelValue = 4;
         else if (yPos > terrainHeight)
             return 0;
         else
@@ -250,6 +250,17 @@ public class World : MonoBehaviour
             }
 
         }
+
+        foreach (Lode lode in biome.lodes)
+        {
+            if (lode.nodeName == "Caves")
+            {
+                if (Noise.Get3DPerlin(pos, lode.noiseOffset, lode.scale, lode.threshhold))
+                    voxelValue = lode.blockID;
+            }
+        }
+
+
 
         return voxelValue;
 
