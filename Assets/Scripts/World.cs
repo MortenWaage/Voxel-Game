@@ -27,8 +27,7 @@ public class World : MonoBehaviour
 
     public GameObject debugScreen;
 
-    public int minTerrainHeight = 2;
-    public int maxTerrainHeight = 16;
+    public int defaultTerrainHeight = 25;
 
     private void Start()
     {
@@ -95,20 +94,41 @@ public class World : MonoBehaviour
 
         Vector3 spawnPos = _spawnPosition;
 
-        float yPos = spawnPos.y;
+        bool gotPos = false;
 
         int timeOut = VoxelData.ChunkHeight;
 
-        while (!CheckForVoxel(new Vector3(spawnPos.x, spawnPos.y - 2f, spawnPos.z)))
+        while (gotPos == false)
         {
-            spawnPos.y -= 1;
-            timeOut--;
-            if (timeOut < 0)
+            while (!CheckForVoxel(new Vector3(spawnPos.x, spawnPos.y - 2f, spawnPos.z)))
             {
-                Debug.Log("Error in CheckSpawnPos() - Unable to find ground");
-                break;
+                spawnPos.y -= 1;
+                timeOut--;
+
+                if (spawnPos.y < defaultTerrainHeight)
+                {
+                    spawnPos.y = _spawnPosition.y;
+                    spawnPos.x -= 1;
+                    spawnPos.z += 1;
+                    timeOut = VoxelData.ChunkHeight;
+                }
+
+                if (timeOut < 0)
+                {
+                    Debug.Log("Error in CheckSpawnPos() - Unable to find ground");
+                    break;
+                }
             }
+
+            if (CheckForVoxel(new Vector3(spawnPos.x, spawnPos.y - 2f, spawnPos.z)))
+            {
+                gotPos = true;
+            }
+            else
+                Debug.Log("Error in CheckSpawnPos() - Unable to find suitable spawn point");
+                break;
         }
+
 
         return new Vector3(spawnPos.x, spawnPos.y, spawnPos.z);
     }
@@ -223,7 +243,7 @@ public class World : MonoBehaviour
         /* BASIC TERRAIN PASS */
 
         int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 0, biome.terrainScale)) + biome.solidGroundHeight;
-        terrainHeight = Mathf.Max(minTerrainHeight, terrainHeight);
+        terrainHeight = Mathf.Max(defaultTerrainHeight, terrainHeight);
         byte voxelValue = 0;
 
         if (yPos == terrainHeight)
