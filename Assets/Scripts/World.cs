@@ -27,7 +27,7 @@ public class World : MonoBehaviour
 
     public GameObject debugScreen;
 
-    public int defaultTerrainHeight = 25;
+    public int terrainCutoff = 25; //Setter en minimumsverdi for terreghøyde (En høyde fra Perlin noise på f.ex 20 vil settes til 25 for å gi mer naturlig terreng.
 
     private void Start()
     {
