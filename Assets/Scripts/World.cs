@@ -244,7 +244,7 @@ public class World : MonoBehaviour
         int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 0, biome.terrainScale)) + biome.solidGroundHeight;              
 
 
-        terrainHeight = Mathf.Max(defaultTerrainHeight, terrainHeight);
+        terrainHeight = Mathf.Max(terrainCutoff, terrainHeight);
         byte voxelValue = 0;
 
         if (yPos == terrainHeight)
