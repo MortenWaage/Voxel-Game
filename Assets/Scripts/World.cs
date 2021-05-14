@@ -42,8 +42,6 @@ public class World : MonoBehaviour
 
         spawnPosition = new Vector3(_xZ + _xZOffSet, _y, _xZ + _xZOffSet);
 
-        //spawnPosition = new Vector3(((VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f), VoxelData.ChunkHeight, (VoxelData.WorldSizeInChunks * VoxelData.ChunkWidth) / 2f);
-
         GenerateWorld();
 
         player.position = CheckSpawnPos(spawnPosition);
@@ -58,13 +56,14 @@ public class World : MonoBehaviour
 
         playerChunkCoord = GetChunkCoordFromVector3(player.position);
 
-        // Only update the chunks if the player has moved from the chunk they were previously on.
+        // Oppdater chunks om spilleren har flyttet seg siden sist frame
         if (!playerChunkCoord.Equals(playerLastChunkCoord))
             CheckViewDistance();
 
         if (chunksToCreate.Count > 0 && !isCreatingChunks)
             StartCoroutine("CreateChunks");
 
+        // Åpne debugscreen
         if (Input.GetKeyDown(KeyCode.F3))
             debugScreen.SetActive(!debugScreen.activeSelf);
 
@@ -168,17 +167,17 @@ public class World : MonoBehaviour
 
         List<ChunkCoord> previouslyActiveChunks = new List<ChunkCoord>(activeChunks);
 
-        // Loop through all chunks currently within view distance of the player.
+        // Loop gjennom alle chunks i view distance
         for (int x = coord.x - VoxelData.ViewDistanceInChunks; x < coord.x + VoxelData.ViewDistanceInChunks; x++)
         {
             for (int z = coord.z - VoxelData.ViewDistanceInChunks; z < coord.z + VoxelData.ViewDistanceInChunks; z++)
             {
 
-                // If the current chunk is in the world...
+                // Hvis chunken finnes i verden...
                 if (IsChunkInWorld(new ChunkCoord(x, z)))
                 {
 
-                    // Check if it active, if not, activate it.
+                    // Hvis chunken ikke er aktv, aktiver den
                     if (chunks[x, z] == null)
                     {
                         chunks[x, z] = new Chunk(new ChunkCoord(x, z), this, false);
@@ -191,7 +190,7 @@ public class World : MonoBehaviour
                     activeChunks.Add(new ChunkCoord(x, z));
                 }
 
-                // Check through previously active chunks to see if this chunk is there. If it is, remove it from the list.
+                // Sjekk tidligere aktive chunks for å se om den enda finnes. Hvis den gjør det, fjern fra lista
                 for (int i = 0; i < previouslyActiveChunks.Count; i++)
                 {
 
@@ -203,7 +202,7 @@ public class World : MonoBehaviour
             }
         }
 
-        // Any chunks left in the previousActiveChunks list are no longer in the player's view distance, so loop through and disable them.
+        // Skru av chunks utenfor view distance
         foreach (ChunkCoord c in previouslyActiveChunks)
             chunks[c.x, c.z].isActive = false;
 
@@ -230,19 +229,21 @@ public class World : MonoBehaviour
 
         int yPos = Mathf.FloorToInt(pos.y);
 
-        /* IMMUTABLE PASS */
+        /* Luft og Bedrock */
 
-        // If outside world, return air.
+        // Luft
         if (!IsVoxelInWorld(pos))
             return 0;
 
-        // If bottom block of chunk, return bedrock.
+        // Bedrock
         if (yPos == 0)
             return 1;
 
         /* BASIC TERRAIN PASS */
 
-        int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 0, biome.terrainScale)) + biome.solidGroundHeight;
+        int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 0, biome.terrainScale)) + biome.solidGroundHeight;              
+
+
         terrainHeight = Mathf.Max(defaultTerrainHeight, terrainHeight);
         byte voxelValue = 0;
 
@@ -254,8 +255,8 @@ public class World : MonoBehaviour
             return 0;
         else
             voxelValue = 2;
-
-        /* SECOND PASS */
+     
+        /* Mineraler og andre blokker */
 
         if (voxelValue == 2)
         {
@@ -271,13 +272,15 @@ public class World : MonoBehaviour
 
         }
 
+
+        //Veldig basic cave. Må se på Perlin Worms-algoritmer
         foreach (Lode lode in biome.lodes)
         {
             if (lode.nodeName == "Caves")
             {
                 if (Noise.Get3DPerlin(pos, lode.noiseOffset, lode.scale, lode.threshhold))
                     voxelValue = lode.blockID;
-            }
+            }            
         }
 
 
