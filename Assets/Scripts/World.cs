@@ -63,7 +63,7 @@ public class World : MonoBehaviour
         if (chunksToCreate.Count > 0 && !isCreatingChunks)
             StartCoroutine("CreateChunks");
 
-        // Åpne debugscreen
+        // Ã…pne debugscreen
         if (Input.GetKeyDown(KeyCode.F3))
             debugScreen.SetActive(!debugScreen.activeSelf);
 
@@ -190,7 +190,7 @@ public class World : MonoBehaviour
                     activeChunks.Add(new ChunkCoord(x, z));
                 }
 
-                // Sjekk tidligere aktive chunks for å se om den enda finnes. Hvis den gjør det, fjern fra lista
+                // Sjekk tidligere aktive chunks for Ã¥ se om den enda finnes. Hvis den gjÃ¸r det, fjern fra lista
                 for (int i = 0; i < previouslyActiveChunks.Count; i++)
                 {
 
@@ -239,7 +239,7 @@ public class World : MonoBehaviour
         if (yPos == 0)
             return 1;
 
-        /* BASIC TERRAIN PASS */
+        /* FÃ¸rste pass av terreng-generering */
 
         int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 0, biome.terrainScale)) + biome.solidGroundHeight;              
 
@@ -273,7 +273,7 @@ public class World : MonoBehaviour
         }
 
 
-        //Veldig basic cave. Må se på Perlin Worms-algoritmer
+        //Veldig basic cave. MÃ¥ se pÃ¥ Perlin Worms-algoritmer
         foreach (Lode lode in biome.lodes)
         {
             if (lode.nodeName == "Caves")
