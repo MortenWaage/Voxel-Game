@@ -64,7 +64,7 @@ public class Player : MonoBehaviour
 
     private void CalculateVelocity()
     {
-        //Apply gravity
+        //Tyngdekraft
         if (verticalMomentum > gravity)
             verticalMomentum += Time.fixedDeltaTime * gravity;
 

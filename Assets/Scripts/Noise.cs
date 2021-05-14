@@ -6,8 +6,9 @@ public static class Noise
 {
     public static float Get2DPerlin (Vector2 position, float offset, float scale)
     {
-        return Mathf.PerlinNoise((position.x + 0.1f) / VoxelData.ChunkWidth * scale + offset, (position.y + 0.1f) / VoxelData.ChunkWidth * scale + offset);
+        return Mathf.PerlinNoise((position.x + 0.1f) / VoxelData.ChunkWidth * scale + offset, (position.y + 0.1f) / VoxelData.ChunkWidth * scale + offset);        
     }
+
 
     public static bool Get3DPerlin (Vector3 position, float offset, float scale, float threshhold)
     {
@@ -18,13 +19,17 @@ public static class Noise
         float z = (position.z + offset + 0.1f) * scale;
 
         float AB = Mathf.PerlinNoise(x, y);
-        float BC = Mathf.PerlinNoise(x, z);
+        float BC = Mathf.PerlinNoise(y, z);
         float AC = Mathf.PerlinNoise(x, z);
+
         float BA = Mathf.PerlinNoise(y, x);
-        float CB = Mathf.PerlinNoise(z, x);
+        float CB = Mathf.PerlinNoise(z, y);
         float CA = Mathf.PerlinNoise(z, x);
 
-        if ((AB + BC + AC + BA + CB + CA) / 6f > threshhold)
+        float ABC = AB + BC + AC + BA + CB + CA;
+        //float product = ABC % 6f; modulo, trenger ikke denne nå
+
+        if (ABC / 6f > threshhold)
         {
             return true;
         }

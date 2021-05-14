@@ -43,7 +43,7 @@ public static class VoxelData
         new Vector3(1.0f, 0.0f, 0.0f)    // Right Face
     };
 
-    public static readonly int[,] voxelTris = new int[6, 4] // Commented out vertice data that's not needed.
+    public static readonly int[,] voxelTris = new int[6, 4]
     {
         // 0 -> 1 -> 2    then 2 -> 1 -> 3
 
@@ -55,7 +55,7 @@ public static class VoxelData
         {1, 2, 5, /*5, 2,*/ 6 }  // Right Face
     };
 
-    public static readonly Vector2[] voxelUVs = new Vector2[4] // Commented out extra UV's we dont need
+    public static readonly Vector2[] voxelUVs = new Vector2[4]
     {
         new Vector2(0.0f, 0.0f),   // Back Face
         new Vector2(0.0f, 1.0f),   // Front Face
