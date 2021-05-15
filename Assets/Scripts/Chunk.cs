@@ -147,6 +147,7 @@ public class Chunk
         int zCheck = Mathf.FloorToInt(pos.z);
 
         xCheck -= Mathf.FloorToInt(chunkObject.transform.position.x);
+        yCheck -= Mathf.FloorToInt(chunkObject.transform.position.y);
         zCheck -= Mathf.FloorToInt(chunkObject.transform.position.z);
 
         return voxelMap[xCheck, yCheck, zCheck];
@@ -223,20 +224,23 @@ public class ChunkCoord
 {
 
     public int x;
+    public int y;
     public int z;
 
     public ChunkCoord()
     {
 
         x = 0;
+        y = 0;
         z = 0;
 
     }
 
-    public ChunkCoord(int _x, int _z)
+    public ChunkCoord(int _x, int _y, int _z)
     {
 
         x = _x;
+        y = _y;
         z = _z;
 
     }
@@ -245,9 +249,11 @@ public class ChunkCoord
     {
 
         int xCheck = Mathf.FloorToInt(pos.x);
+        int yCheck = Mathf.FloorToInt(pos.y);
         int zCheck = Mathf.FloorToInt(pos.z);
 
         x = xCheck / VoxelData.ChunkWidth;
+        y = yCheck / VoxelData.ChunkHeight;
         z = zCheck / VoxelData.ChunkWidth;
 
     }

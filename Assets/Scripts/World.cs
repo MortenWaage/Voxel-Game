@@ -16,7 +16,7 @@ public class World : MonoBehaviour
     public Material material;
     public BlockType[] blocktypes;
 
-    Chunk[,] chunks = new Chunk[VoxelData.WorldSizeInChunks, VoxelData.WorldSizeInChunks];
+    Chunk[,,] chunks = new Chunk[VoxelData.WorldSizeInChunks, VoxelData.WorldHeightInChunks, VoxelData.WorldSizeInChunks];
 
     List<ChunkCoord> activeChunks = new List<ChunkCoord>();
     public ChunkCoord playerChunkCoord;
@@ -37,7 +37,7 @@ public class World : MonoBehaviour
 
         int _xZ = ((VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks) * VoxelData.ChunkWidth;
         int _xZOffSet = (VoxelData.ViewDistanceInChunks * VoxelData.ChunkWidth);
-        int _y = VoxelData.ChunkHeight;
+        int _y = VoxelData.ChunkHeight * VoxelData.WorldHeightInChunks;
 
 
         spawnPosition = new Vector3(_xZ + _xZOffSet, _y, _xZ + _xZOffSet);
@@ -72,16 +72,18 @@ public class World : MonoBehaviour
 
     void GenerateWorld()
     {
-        for (int x = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; x < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; x++)
+        for (int y = 0; y < VoxelData.WorldHeightInChunks; y++)
         {
-            for (int z = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; z < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; z++)
+            for (int x = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; x < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; x++)
             {
-
-                chunks[x, z] = new Chunk(new ChunkCoord(x, z), this, true);
-                activeChunks.Add(new ChunkCoord(x, z));
-
+                for (int z = (VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks; z < (VoxelData.WorldSizeInChunks / 2) + VoxelData.ViewDistanceInChunks; z++)
+                {
+                    chunks[x, y, z] = new Chunk(new ChunkCoord(x, y, z), this, true);
+                    activeChunks.Add(new ChunkCoord(x, y, z));
+                }
             }
         }
+
 
 
         
