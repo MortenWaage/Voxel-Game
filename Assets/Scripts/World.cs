@@ -27,7 +27,7 @@ public class World : MonoBehaviour
 
     public GameObject debugScreen;
 
-    public int terrainCutoff = 25; //Setter en minimumsverdi for terreghøyde (En høyde fra Perlin noise på f.ex 20 vil settes til 25 for å gi mer naturlig terreng.
+    private int terrainCutoff = 5; //Setter en minimumsverdi for terreghøyde (En høyde fra Perlin noise på f.ex 20 vil settes til 25 for å gi mer naturlig terreng.
 
     private void Start()
     {
@@ -106,7 +106,7 @@ public class World : MonoBehaviour
                 spawnPos.y -= 1;
                 timeOut--;
 
-                if (spawnPos.y < defaultTerrainHeight)
+                if (spawnPos.y < terrainCutoff)
                 {
                     spawnPos.y = _spawnPosition.y;
                     spawnPos.x -= 1;
@@ -142,7 +142,7 @@ public class World : MonoBehaviour
         while (chunksToCreate.Count > 0)
         {
 
-            chunks[chunksToCreate[0].x, chunksToCreate[0].z].Init();
+            chunks[chunksToCreate[0].x, chunksToCreate[0].y, chunksToCreate[0].z].Init();
             chunksToCreate.RemoveAt(0);
             yield return null;
 
@@ -156,8 +156,9 @@ public class World : MonoBehaviour
     {
 
         int x = Mathf.FloorToInt(pos.x / VoxelData.ChunkWidth);
+        int y = Mathf.FloorToInt(pos.y / VoxelData.ChunkHeight);
         int z = Mathf.FloorToInt(pos.z / VoxelData.ChunkWidth);
-        return new ChunkCoord(x, z);
+        return new ChunkCoord(x, y, z);
 
     }
 
@@ -169,44 +170,48 @@ public class World : MonoBehaviour
 
         List<ChunkCoord> previouslyActiveChunks = new List<ChunkCoord>(activeChunks);
 
-        // Loop gjennom alle chunks i view distance
-        for (int x = coord.x - VoxelData.ViewDistanceInChunks; x < coord.x + VoxelData.ViewDistanceInChunks; x++)
+        for (int y = 0; y < coord.y; y++)
         {
-            for (int z = coord.z - VoxelData.ViewDistanceInChunks; z < coord.z + VoxelData.ViewDistanceInChunks; z++)
+            // Loop gjennom alle chunks i view distance
+            for (int x = coord.x - VoxelData.ViewDistanceInChunks; x < coord.x + VoxelData.ViewDistanceInChunks; x++)
             {
-
-                // Hvis chunken finnes i verden...
-                if (IsChunkInWorld(new ChunkCoord(x, z)))
+                for (int z = coord.z - VoxelData.ViewDistanceInChunks; z < coord.z + VoxelData.ViewDistanceInChunks; z++)
                 {
 
-                    // Hvis chunken ikke er aktv, aktiver den
-                    if (chunks[x, z] == null)
+                    // Hvis chunken finnes i verden...
+                    if (IsChunkInWorld(new ChunkCoord(x, y, z)))
                     {
-                        chunks[x, z] = new Chunk(new ChunkCoord(x, z), this, false);
-                        chunksToCreate.Add(new ChunkCoord(x, z));
+
+                        // Hvis chunken ikke er aktv, aktiver den
+                        if (chunks[x, y, z] == null)
+                        {
+                            chunks[x, y, z] = new Chunk(new ChunkCoord(x, y, z), this, false);
+                            chunksToCreate.Add(new ChunkCoord(x, y, z));
+                        }
+                        else if (!chunks[x, y, z].isActive)
+                        {
+                            chunks[x, y, z].isActive = true;
+                        }
+                        activeChunks.Add(new ChunkCoord(x, y, z));
                     }
-                    else if (!chunks[x, z].isActive)
+
+                    // Sjekk tidligere aktive chunks for å se om den enda finnes. Hvis den gjør det, fjern fra lista
+                    for (int i = 0; i < previouslyActiveChunks.Count; i++)
                     {
-                        chunks[x, z].isActive = true;
+
+                        if (previouslyActiveChunks[i].Equals(new ChunkCoord(x, y, z)))
+                            previouslyActiveChunks.RemoveAt(i);
+
                     }
-                    activeChunks.Add(new ChunkCoord(x, z));
-                }
-
-                // Sjekk tidligere aktive chunks for å se om den enda finnes. Hvis den gjør det, fjern fra lista
-                for (int i = 0; i < previouslyActiveChunks.Count; i++)
-                {
-
-                    if (previouslyActiveChunks[i].Equals(new ChunkCoord(x, z)))
-                        previouslyActiveChunks.RemoveAt(i);
 
                 }
-
             }
         }
 
+
         // Skru av chunks utenfor view distance
         foreach (ChunkCoord c in previouslyActiveChunks)
-            chunks[c.x, c.z].isActive = false;
+            chunks[c.x, c.y, c.z].isActive = false;
 
     }
 
@@ -215,11 +220,11 @@ public class World : MonoBehaviour
 
         ChunkCoord thisChunk = new ChunkCoord(pos);
 
-        if (!IsChunkInWorld(thisChunk) || pos.y < 0 || pos.y > VoxelData.ChunkHeight)
+        if (!IsChunkInWorld(thisChunk) || pos.y < 0 || pos.y > VoxelData.ChunkHeight * VoxelData.WorldHeightInChunks)
             return false;
 
-        if (chunks[thisChunk.x, thisChunk.z] != null && chunks[thisChunk.x, thisChunk.z].isVoxelMapPopulated)
-            return blocktypes[chunks[thisChunk.x, thisChunk.z].GetVoxelFromGlobalVector3(pos)].isSolid;
+        if (chunks[thisChunk.x, thisChunk.y, thisChunk.z] != null && chunks[thisChunk.x, thisChunk.y, thisChunk.z].isVoxelMapPopulated)
+            return blocktypes[chunks[thisChunk.x, thisChunk.y, thisChunk.z].GetVoxelFromGlobalVector3(pos)].isSolid;
 
         return blocktypes[GetVoxel(pos)].isSolid;
 
@@ -306,7 +311,7 @@ public class World : MonoBehaviour
     bool IsVoxelInWorld(Vector3 pos)
     {
 
-        if (pos.x >= 0 && pos.x < VoxelData.WorldSizeInVoxels && pos.y >= 0 && pos.y < VoxelData.ChunkHeight && pos.z >= 0 && pos.z < VoxelData.WorldSizeInVoxels)
+        if (pos.x >= 0 && pos.x < VoxelData.WorldSizeInVoxels && pos.y >= 0 && pos.y < VoxelData.ChunkHeight * VoxelData.WorldHeightInChunks && pos.z >= 0 && pos.z < VoxelData.WorldSizeInVoxels)
             return true;
         else
             return false;
