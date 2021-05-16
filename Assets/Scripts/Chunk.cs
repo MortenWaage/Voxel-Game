@@ -20,7 +20,7 @@ public class Chunk
 
     World world;
 
-    private bool _isActive;
+    public bool _isActive;
     public bool isVoxelMapPopulated = false;
 
     public Chunk(ChunkCoord _coord, World _world, bool generateOnLoad)

@@ -10,7 +10,7 @@ public class Player : MonoBehaviour
     private Transform cam;
     private World world;
 
-    public float walkSpeed = 3f;
+    public float walkSpeed = 15f;
     public float sprintSpeed = 6f;
     public float jumpForce = 5f;
     public float gravity = -9.8f;
@@ -51,8 +51,25 @@ public class Player : MonoBehaviour
     {
         GetPlayerInputs();
 
+        SetViewLayer();
+
         transform.Rotate(Vector3.up * mouseHorizontal);
         cam.Rotate(Vector3.right * -mouseVertical);
+    }
+
+    private void SetViewLayer()
+    {
+        if (Input.GetButtonDown("LayerUp"))
+        {
+            world.ChangeLayerVisibility(true);
+        }
+            
+
+        if (Input.GetButtonDown("LayerDown"))
+        {       
+            world.ChangeLayerVisibility(false);
+        }
+            
     }
 
     void Jump()

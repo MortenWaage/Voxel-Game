@@ -21,7 +21,8 @@ public class World : MonoBehaviour
     List<ChunkCoord> activeChunks = new List<ChunkCoord>();
     public ChunkCoord playerChunkCoord;
     ChunkCoord playerLastChunkCoord;
-
+    
+    
     List<ChunkCoord> chunksToCreate = new List<ChunkCoord>();
     private bool isCreatingChunks;
 
@@ -29,20 +30,23 @@ public class World : MonoBehaviour
 
     private int terrainCutoff = 5; //Setter en minimumsverdi for terreghøyde (En høyde fra Perlin noise på f.ex 20 vil settes til 25 for å gi mer naturlig terreng.
 
+    private int currentViewedLayer;
+
     private void Start()
     {
         
-
+        
         Random.InitState(seed);
 
         int _xZ = ((VoxelData.WorldSizeInChunks / 2) - VoxelData.ViewDistanceInChunks) * VoxelData.ChunkWidth;
         int _xZOffSet = (VoxelData.ViewDistanceInChunks * VoxelData.ChunkWidth);
         int _y = VoxelData.ChunkHeight * VoxelData.WorldHeightInChunks;
 
-
         spawnPosition = new Vector3(_xZ + _xZOffSet, _y, _xZ + _xZOffSet);
 
         GenerateWorld();
+
+        currentViewedLayer = VoxelData.WorldHeightInChunks;
 
         player.position = CheckSpawnPos(spawnPosition);
 
@@ -82,11 +86,29 @@ public class World : MonoBehaviour
                     activeChunks.Add(new ChunkCoord(x, y, z));
                 }
             }
+        }    
+    }
+
+    public void ChangeLayerVisibility(bool show)
+    {
+        if ((currentViewedLayer == VoxelData.WorldHeightInChunks && show == true) || (currentViewedLayer == 1 && show == false))
+            return;                         
+
+
+        if (show == true)
+        {
+            Debug.Log("Moving Up Layer");
+            currentViewedLayer += 1;
         }
 
+        else if (show == false)
+        {
+            Debug.Log("Moving Down Layer");
+            currentViewedLayer -= 1;
+        }
 
-
-        
+        UpdateViewedChunks(show);
+        Debug.Log(currentViewedLayer);
 
     }
 
@@ -162,6 +184,28 @@ public class World : MonoBehaviour
 
     }
 
+    void UpdateViewedChunks(bool visibility)
+   {
+        ChunkCoord coord = GetChunkCoordFromVector3(player.position);
+        
+
+        foreach (ChunkCoord c in activeChunks)
+        {  
+            if (visibility == false)
+            {
+                if (c.y > currentViewedLayer-1)                
+                    chunks[c.x, c.y, c.z].isActive = visibility;
+            }
+            else
+            {
+                 if (c.y == currentViewedLayer-1)                
+                    chunks[c.x, c.y, c.z].isActive = visibility;               
+            }
+        }  
+   
+    }
+
+
     void CheckViewDistance()
     {
 
@@ -170,7 +214,7 @@ public class World : MonoBehaviour
 
         List<ChunkCoord> previouslyActiveChunks = new List<ChunkCoord>(activeChunks);
 
-        for (int y = 0; y < coord.y; y++)
+        for (int y = 0; y < currentViewedLayer; y++)
         {
             // Loop gjennom alle chunks i view distance
             for (int x = coord.x - VoxelData.ViewDistanceInChunks; x < coord.x + VoxelData.ViewDistanceInChunks; x++)
@@ -179,8 +223,7 @@ public class World : MonoBehaviour
                 {
 
                     // Hvis chunken finnes i verden...
-                    if (IsChunkInWorld(new ChunkCoord(x, y, z)))
-                    {
+                    if (IsChunkInWorld(new ChunkCoord(x, y, z)))                    {
 
                         // Hvis chunken ikke er aktv, aktiver den
                         if (chunks[x, y, z] == null)
